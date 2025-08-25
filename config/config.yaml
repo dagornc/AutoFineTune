@@ -1,0 +1,78 @@
+# ==============================================================================
+# FICHIER DE CONFIGURATION CENTRAL POUR AUTOFINETUNE
+# ==============================================================================
+# Ce fichier pilote l'intégralité du processus de fine-tuning.
+# Modifiez les paramètres ci-dessous pour personnaliser votre entraînement.
+
+# --- Section 1: Configuration du Modèle ---
+model:
+  # Spécifiez la source du modèle.
+  # Options possibles: "huggingface", "ollama".
+  # "huggingface": Télécharge le modèle depuis le Hub Hugging Face.
+  # "ollama": Utilise un modèle local géré par Ollama (doit être pré-installé).
+  source: "huggingface"
+
+  # Nom ou chemin du modèle.
+  # Si source="huggingface", ceci est l'identifiant du modèle sur le Hub (ex: 'google/gemma-2b').
+  # Si source="ollama", ceci est le nom du modèle local (ex: 'llama2').
+  # PAR DÉFAUT: 'google/gemma-2b', un modèle performant et léger.
+  name: "google/gemma-2b"
+
+  # Précision de la quantification. '4bit' est recommandé pour un usage CPU.
+  quantization: "4bit"
+
+# --- Section 2: Configuration des Données ---
+dataset:
+  # Spécifiez la source des données.
+  # Options possibles: "huggingface", "local".
+  # "huggingface": Télécharge le dataset depuis le Hub Hugging Face.
+  # "local": Utilise un fichier de dataset local.
+  source: "huggingface"
+
+  # Nom ou chemin du dataset.
+  # Si source="huggingface", identifiant du dataset sur le Hub (ex: 'tatsu-lab/alpaca').
+  # Si source="local", chemin vers votre fichier .jsonl (ex: 'data/custom_dataset.jsonl').
+  # PAR DÉFAUT: 'tatsu-lab/alpaca', un dataset classique pour le fine-tuning d'instructions.
+  name: "tatsu-lab/alpaca"
+
+# --- Section 3: Configuration de l'Entraînement (Hyperparamètres) ---
+training:
+  # Nom du modèle en sortie. Sera sauvegardé dans le répertoire 'output_model/'.
+  output_model_name: "gemma-2b-finetuned-alpaca"
+
+  # Nombre total d'époques d'entraînement.
+  # Une époque correspond à un passage complet sur l'ensemble du dataset.
+  # Valeurs typiques: 1 à 5.
+  epochs: 1
+
+  # Taille des lots (batch size) par appareil.
+  # Nombre d'exemples de données traités avant la mise à jour des poids du modèle.
+  # Diminuez si vous rencontrez des erreurs de mémoire.
+  per_device_train_batch_size: 1
+
+  # Taux d'apprentissage (learning rate).
+  # Contrôle la vitesse à laquelle le modèle apprend.
+  # Une valeur trop élevée peut rendre l'entraînement instable.
+  # Valeurs typiques: entre 1e-5 et 5e-4.
+  learning_rate: 2e-4
+
+  # Algorithme d'optimisation.
+  # 'paged_adamw_8bit' est efficace en termes de mémoire.
+  optimizer: "paged_adamw_8bit"
+
+  # Type de planificateur de taux d'apprentissage.
+  # 'cosine' ajuste le taux d'apprentissage de manière fluide.
+  lr_scheduler_type: "cosine"
+
+# --- Section 4: Configuration QLoRA (Quantized Low-Rank Adaptation) ---
+qlora:
+  # Le rang de la décomposition matricielle (dimension de l'espace de rang inférieur).
+  # Une valeur plus élevée signifie plus de paramètres à entraîner.
+  # Valeurs typiques: 8, 16, 32, 64.
+  r: 16
+
+  # Le facteur d'échelle alpha. Souvent, il est bon de le régler au double de 'r'.
+  lora_alpha: 32
+
+  # Le taux de dropout pour les couches LoRA. Aide à prévenir le surapprentissage.
+  lora_dropout: 0.05
